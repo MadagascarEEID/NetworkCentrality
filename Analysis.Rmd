@@ -14,15 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 #devtools::install_github('Ecological-Complexity-Lab/infomap_ecology_package', force=T)
 library(tidyverse); library(scales);library(muxViz);library(infomapecology);library(bipartite);library(ggpubr);library(igraph);library(metaforest);library(ggnet);library(viridis);library(MuMIn)
 
-#load data
-enviro_adj <- read.csv("~/Documents/Manuscripts/SAVA_Network/Data/Environmental_overlap_unipartite.csv")
-contact_adj <- read.csv("~/Documents/Manuscripts/SAVA_Network/Data/Close_contact.csv")
-name_undirected_man <- readRDS("~/Documents/Projects/SAVA_multilayer/everyone_name_undirected_Mandena12.RDS")
-name_undirected_sara <- readRDS("~/Documents/Projects/SAVA_multilayer/everyone_name_undirected_Sarahandrano123.RDS")
-name_undirected_anda <- readRDS("~/Documents/Projects/SAVA_multilayer/everyone_name_undirected_andatsakala123.RDS")
-house_dist <- read.csv("~/Documents/Projects/SAVA_multilayer/House_distance.csv")
-metadata <- read.csv("~/Documents/Manuscripts/SAVA_Network/Data/Survey_Demographic_Health.csv")
-
 
 ```
 
@@ -34,17 +25,17 @@ village <- metadata %>% select(social_netid, village) %>% rename("id1" = "social
 enviro_adj2 <- enviro_adj %>% filter(network!="all", network!="village") %>% group_by(id1, id2, village) %>% summarise(weight=sum(weight))
 enviro_adj2 <- enviro_adj2[!grepl("Z", enviro_adj2$id1),]
 enviro_adj2 <- enviro_adj2[!grepl("Z", enviro_adj2$id2),]
-enviro_mand_edge <- enviro_adj2 %>% filter(village =="Mandena") %>% select(id1, id2, weight)
-enviro_sara_edge <- enviro_adj2 %>% filter(village =="Sarahandrano") %>% select(id1, id2, weight)
-enviro_anda_edge <- enviro_adj2 %>% filter(village =="Andatsakala") %>% select(id1, id2, weight) 
+enviro_mand_edge <- enviro_adj2 %>% filter(village =="M_Village") %>% select(id1, id2, weight)
+enviro_sara_edge <- enviro_adj2 %>% filter(village =="S_Village") %>% select(id1, id2, weight)
+enviro_anda_edge <- enviro_adj2 %>% filter(village =="A_Village") %>% select(id1, id2, weight) 
 
 #Close Contact network
 contact_adj <- left_join(contact_adj, village, by="id1")
 contact_adj2 <- contact_adj[!grepl("Z", contact_adj$id1),]
 contact_adj2 <- contact_adj2[!grepl("Z", contact_adj2$id2),]
-contact_mand_edge <- contact_adj %>% filter(village =="Mandena") %>% select(id1, id2, close_contact_edge) %>% rename("weight" = "close_contact_edge") %>% filter(weight!=0)
-contact_sara_edge <- contact_adj %>% filter(village =="Sarahandrano") %>% select(id1, id2, close_contact_edge) %>% rename("weight" = "close_contact_edge") %>% filter(weight!=0)
-contact_anda_edge <- contact_adj %>% filter(village =="Andatsakala") %>% select(id1, id2, close_contact_edge) %>% rename("weight" = "close_contact_edge") %>% filter(weight!=0)
+contact_mand_edge <- contact_adj %>% filter(village =="M_Village") %>% select(id1, id2, close_contact_edge) %>% rename("weight" = "close_contact_edge") %>% filter(weight!=0)
+contact_sara_edge <- contact_adj %>% filter(village =="S_Village") %>% select(id1, id2, close_contact_edge) %>% rename("weight" = "close_contact_edge") %>% filter(weight!=0)
+contact_anda_edge <- contact_adj %>% filter(village =="A_Village") %>% select(id1, id2, close_contact_edge) %>% rename("weight" = "close_contact_edge") %>% filter(weight!=0)
 
 #Naming network
 
@@ -61,14 +52,14 @@ house_dist <- house_dist[house_dist$dist!=0,]
 house_dist$dist <- 1/house_dist$dist
 
 distance_edges <- left_join(house_dist, village, by = "id1")%>% filter(dist !=0)
-distance_mand_edge <- distance_edges %>% filter(village=="Mandena")
-distance_anda_edge <- distance_edges %>% filter(village=="Andatsakala")
-distance_sara_edge <- distance_edges %>% filter(village=="Sarahandrano")
+distance_mand_edge <- distance_edges %>% filter(village=="M_Village")
+distance_anda_edge <- distance_edges %>% filter(village=="A_Village")
+distance_sara_edge <- distance_edges %>% filter(village=="S_Village")
 
 
 ```
 
-```{r Build Networks: Mandena}
+```{r Build Networks: M_Village}
 #Setup intra-layer edge lists
 enviro_mand_edge <- enviro_mand_edge %>% rename(node.from =id1, node.to = id2)%>% mutate(layer.from =1, layer.to =1) %>% select(node.from, layer.from, node.to, layer.to, weight) %>% mutate(weight = rescale(weight,to = c(0.01,1)))
 
@@ -90,7 +81,7 @@ name_mand_edge <- name_mand_edge %>% filter(node.to %in% node.from)#filter out p
 
 ```
 
-```{r Build Networks: Sarahandrano}
+```{r Build Networks: S_Village}
 #Setup intra-layer edge lists
 enviro_sara_edge <- enviro_sara_edge %>% rename(node.from =id1, node.to = id2)%>% mutate(layer.from =1, layer.to =1) %>% select(node.from, layer.from, node.to, layer.to, weight) %>% mutate(weight = rescale(weight,to = c(0.01,1)))
 contact_sara_edge <- contact_sara_edge %>% rename(node.from =id1, node.to = id2)%>% mutate(layer.from =2, layer.to =2)%>% select(node.from, layer.from, node.to, layer.to, weight)%>% mutate(weight = rescale(weight,to = c(0.01,1)))
@@ -102,7 +93,7 @@ name_sara_edge <- name_sara_edge %>% filter(node.to %in% node.from)#filter out p
 
 ```
 
-```{r Build Networks: Andatsakala}
+```{r Build Networks: A_Village}
 #Setup intra-layer edge lists
 enviro_anda_edge <- enviro_anda_edge %>% rename(node.from =id1, node.to = id2)%>% mutate(layer.from =1, layer.to =1) %>% select(node.from, layer.from, node.to, layer.to, weight) %>% mutate(weight = rescale(weight,to = c(0.01,1)))
 contact_anda_edge <- contact_anda_edge %>% rename(node.from =id1, node.to = id2)%>% mutate(layer.from =2, layer.to =2)%>% select(node.from, layer.from, node.to, layer.to, weight)%>% mutate(weight = rescale(weight,to = c(0.01,1)))
@@ -114,7 +105,7 @@ name_anda_edge <- name_anda_edge %>% filter(node.to %in% node.from)#filter out p
 
 ```{r Single-layer Centrality}
 #GET SINGLE-LAYER GRAPHS
-#Mandena
+#M_Village
 enviro_mand_g <- graph_from_edgelist(as.matrix(enviro_mand_edge[,c(1,3)]), directed = FALSE)
 name_mand_g <- graph_from_edgelist(as.matrix(name_mand_edge[,c(1,3)]), directed = FALSE)
 contact_mand_g <- graph_from_edgelist(as.matrix(contact_mand_edge[,c(1,3)]), directed = FALSE)
@@ -130,7 +121,7 @@ E(name_mand_g)$weight <- name_mand_edge$weight
 E(contact_mand_g)$weight <- contact_mand_edge$weight
 E(distance_mand_g)$weight <- distance_mand_edge$dist
 
-#Sarahandrano
+#S_Village
 enviro_sara_g <- graph_from_edgelist(as.matrix(enviro_sara_edge[,c(1,3)]), directed = FALSE)
 name_sara_g <-graph_from_edgelist(as.matrix(name_sara_edge[,c(1,3)]), directed = FALSE)
 contact_sara_g <- graph_from_edgelist(as.matrix(contact_sara_edge[,c(1,3)]), directed = FALSE)
@@ -146,7 +137,7 @@ E(name_sara_g)$weight <- name_sara_edge$weight
 E(contact_sara_g)$weight <- contact_sara_edge$weight
 E(distance_sara_g)$weight <- distance_sara_edge$dist
 
-#Andatsakala
+#A_Village
 enviro_anda_g <- graph_from_edgelist(as.matrix(enviro_anda_edge[,c(1,3)]), directed = FALSE)
 name_anda_g <- graph_from_edgelist(as.matrix(name_anda_edge[,c(1,3)]), directed = FALSE)
 contact_anda_g <- graph_from_edgelist(as.matrix(contact_anda_edge[,c(1,3)]), directed = FALSE)
@@ -351,21 +342,21 @@ cor_distance_sara <-as.data.frame(cor((centrality_distance_sara[,c(1,3:5)])))
 cor_distance_anda <-as.data.frame(cor((centrality_distance_anda[,c(1,3:5)])))
 
 
-cor_name_mand$Village <- "Mandena"
-cor_name_sara$Village <- "Sarahandrano"
-cor_name_anda$Village <- "Andatsakala"
+cor_name_mand$Village <- "M_Village"
+cor_name_sara$Village <- "S_Village"
+cor_name_anda$Village <- "A_Village"
 
-cor_enviro_mand$Village <- "Mandena"
-cor_enviro_sara$Village <- "Sarahandrano"
-cor_enviro_anda$Village <- "Andatsakala"
+cor_enviro_mand$Village <- "M_Village"
+cor_enviro_sara$Village <- "S_Village"
+cor_enviro_anda$Village <- "A_Village"
 
-cor_contact_mand$Village <- "Mandena"
-cor_contact_sara$Village <- "Sarahandrano"
-cor_contact_anda$Village <- "Andatsakala"
+cor_contact_mand$Village <- "M_Village"
+cor_contact_sara$Village <- "S_Village"
+cor_contact_anda$Village <- "A_Village"
 
-cor_distance_mand$Village <- "Mandena"
-cor_distance_sara$Village <- "Sarahandrano"
-cor_distance_anda$Village <- "Andatsakala"
+cor_distance_mand$Village <- "M_Village"
+cor_distance_sara$Village <- "S_Village"
+cor_distance_anda$Village <- "A_Village"
 
 cor_name_mand[2,1] <- NA
 cor_name_mand[1,3] <- NA
@@ -393,7 +384,7 @@ cor_name$name2 <- rep(c("PageRank", "Strength", "Betweenness", "Eigenvector"),3)
 cor_name2 <- cor_name %>% pivot_longer(cols = PageRank:Eigen)
 cor_name2$name[cor_name2$name=="Eigen"] <- "Eigenvector"
 
-cor_name_mand_plot <- ggplot(data = cor_name2[cor_name2$Village=="Mandena",], aes(x = name, y=name2,  fill=value))+
+cor_name_mand_plot <- ggplot(data = cor_name2[cor_name2$Village=="M_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -410,7 +401,7 @@ cor_name_mand_plot <- ggplot(data = cor_name2[cor_name2$Village=="Mandena",], ae
     size = 5 
   ) 
 
-cor_name_anda_plot <- ggplot(data = cor_name2[cor_name2$Village=="Andatsakala",], aes(x = name, y=name2,  fill=value))+
+cor_name_anda_plot <- ggplot(data = cor_name2[cor_name2$Village=="A_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -427,7 +418,7 @@ cor_name_anda_plot <- ggplot(data = cor_name2[cor_name2$Village=="Andatsakala",]
     size = 5 
   ) 
 
-cor_name_sara_plot <- ggplot(data = cor_name2[cor_name2$Village=="Sarahandrano",], aes(x = name, y=name2,  fill=value))+
+cor_name_sara_plot <- ggplot(data = cor_name2[cor_name2$Village=="S_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2,)+
   theme_classic()+
   xlab("Centrality")+
@@ -476,7 +467,7 @@ cor_enviro$name2 <- rep(c("PageRank", "Strength", "Betweenness", "Eigenvector"),
 cor_enviro2 <- cor_enviro %>% pivot_longer(cols = PageRank:Eigen)
 cor_enviro2$name[cor_enviro2$name=="Eigen"] <- "Eigenvector"
 
-cor_enviro_mand_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="Mandena",], aes(x = name, y=name2,  fill=value))+
+cor_enviro_mand_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="M_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -495,7 +486,7 @@ cor_enviro_mand_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="Mandena"
     legend.position = "none" # Remove the legend
   )
 
-cor_enviro_anda_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="Andatsakala",], aes(x = name, y=name2,  fill=value))+
+cor_enviro_anda_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="A_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -514,7 +505,7 @@ cor_enviro_anda_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="Andatsak
     legend.position = "none" # Remove the legend
   )
 
-cor_enviro_sara_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="Sarahandrano",], aes(x = name, y=name2,  fill=value))+
+cor_enviro_sara_plot <- ggplot(data = cor_enviro2[cor_enviro2$Village=="S_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2,)+
   theme_classic()+
   xlab("Centrality")+
@@ -568,7 +559,7 @@ cor_distance$name2 <- rep(c("PageRank", "Strength", "Betweenness", "Eigenvector"
 cor_distance2 <- cor_distance %>% pivot_longer(cols = PageRank:Eigen)
 cor_distance2$name[cor_distance2$name=="Eigen"] <- "Eigenvector"
 
-cor_distance_mand_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="Mandena",], aes(x = name, y=name2,  fill=value))+
+cor_distance_mand_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="M_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -587,7 +578,7 @@ cor_distance_mand_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="Ma
     legend.position = "none" # Remove the legend
   )
 
-cor_distance_anda_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="Andatsakala",], aes(x = name, y=name2,  fill=value))+
+cor_distance_anda_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="A_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -606,7 +597,7 @@ cor_distance_anda_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="An
     legend.position = "none" # Remove the legend
   )
 
-cor_distance_sara_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="Sarahandrano",], aes(x = name, y=name2,  fill=value))+
+cor_distance_sara_plot <- ggplot(data = cor_distance2[cor_distance2$Village=="S_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2,)+
   theme_classic()+
   xlab("Centrality")+
@@ -656,7 +647,7 @@ cor_contact$name2 <- rep(c("PageRank", "Strength", "Betweenness", "Eigenvector")
 cor_contact2 <- cor_contact %>% pivot_longer(cols = PageRank:Eigen)
 cor_contact2$name[cor_contact2$name=="Eigen"] <- "Eigenvector"
 
-cor_contact_mand_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="Mandena",], aes(x = name, y=name2,  fill=value))+
+cor_contact_mand_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="M_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -675,7 +666,7 @@ cor_contact_mand_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="Mande
     legend.position = "none" # Remove the legend
   )
 
-cor_contact_anda_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="Andatsakala",], aes(x = name, y=name2,  fill=value))+
+cor_contact_anda_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="A_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2)+
   theme_classic()+
   xlab("Centrality")+
@@ -694,7 +685,7 @@ cor_contact_anda_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="Andat
     legend.position = "none" # Remove the legend
   )
 
-cor_contact_sara_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="Sarahandrano",], aes(x = name, y=name2,  fill=value))+
+cor_contact_sara_plot <- ggplot(data = cor_contact2[cor_contact2$Village=="S_Village",], aes(x = name, y=name2,  fill=value))+
   geom_tile(color="white", size=2,)+
   theme_classic()+
   xlab("Centrality")+
@@ -1295,7 +1286,7 @@ write.csv(metadata,"~/Documents/GitHub/human_animal_networks/gps_networks/metada
 #metadata$commercial_goods <- scale(metadata$commercial_goods)
 #metadata$household_size <- scale(metadata$household_size)
 
-metadata$village[metadata$village=="Ampandrana"] <- "Andatsakala"
+metadata$village[metadata$village=="Ampandrana"] <- "A_Village"
 
 metadata$bmi <- (metadata$weight)/(metadata$height^2)
 #metadata$bmi[metadata$bmi<18.5] <- 1
@@ -1368,26 +1359,26 @@ centrality_name_total2 <- rbind(centrality_name_mand2, centrality_name_sara2,cen
 
 centrality_name_total2$season <- as.factor(centrality_name_total2$season)
 
-centrality_name_mand_df <- centrality_name_total2[centrality_name_total2$village=="Mandena",]
-centrality_name_sara_df <- centrality_name_total2[centrality_name_total2$village=="Sarahandrano",]
-centrality_name_anda_df <- centrality_name_total2[centrality_name_total2$village=="Andatsakala",]
+centrality_name_mand_df <- centrality_name_total2[centrality_name_total2$village=="M_Village",]
+centrality_name_sara_df <- centrality_name_total2[centrality_name_total2$village=="S_Village",]
+centrality_name_anda_df <- centrality_name_total2[centrality_name_total2$village=="A_Village",]
 
 centrality_contact_total2 <- rbind(centrality_contact_mand2, centrality_contact_sara2,centrality_contact_anda2) %>% select(Node, PageRank, gender,  age, house_sol, commercial_goods, village, school_level, bmi, landsize_in_daba, livestock, season, household_size, Strength, Betweenness, Eigen) %>%drop_na()#getting rid of all NA values removed 36 individuals (~4% of all nodes)
 
 centrality_contact_total2$season <- as.factor(centrality_contact_total2$season)
 
 
-centrality_contact_mand_df <- centrality_contact_total2[centrality_contact_total2$village=="Mandena",]
-centrality_contact_sara_df <- centrality_contact_total2[centrality_contact_total2$village=="Sarahandrano",]
-centrality_contact_anda_df <- centrality_contact_total2[centrality_contact_total2$village=="Andatsakala",]
+centrality_contact_mand_df <- centrality_contact_total2[centrality_contact_total2$village=="M_Village",]
+centrality_contact_sara_df <- centrality_contact_total2[centrality_contact_total2$village=="S_Village",]
+centrality_contact_anda_df <- centrality_contact_total2[centrality_contact_total2$village=="A_Village",]
 
 centrality_enviro_total2 <- rbind(centrality_enviro_mand2, centrality_enviro_sara2,centrality_enviro_anda2) %>% select(Node, PageRank, gender,  age, house_sol, commercial_goods, village, school_level, bmi, landsize_in_daba, livestock, season, household_size, Strength, Betweenness, Eigen) %>%drop_na()#getting rid of all NA values removed 42 individuals (~5% of all nodes)
 
 
 
-centrality_enviro_mand_df <- centrality_enviro_total2[centrality_enviro_total2$village=="Mandena",]
-centrality_enviro_sara_df <- centrality_enviro_total2[centrality_enviro_total2$village=="Sarahandrano",]
-centrality_enviro_anda_df <- centrality_enviro_total2[centrality_enviro_total2$village=="Andatsakala",]
+centrality_enviro_mand_df <- centrality_enviro_total2[centrality_enviro_total2$village=="M_Village",]
+centrality_enviro_sara_df <- centrality_enviro_total2[centrality_enviro_total2$village=="S_Village",]
+centrality_enviro_anda_df <- centrality_enviro_total2[centrality_enviro_total2$village=="A_Village",]
 
 
 centrality_enviro_total2$season <- as.factor(centrality_enviro_total2$season)
@@ -1396,9 +1387,9 @@ centrality_distance_total2 <- rbind(centrality_distance_mand2, centrality_distan
 
 centrality_distance_total2$season <- as.factor(centrality_distance_total2$season)
 
-centrality_distance_mand_df <- centrality_distance_total2[centrality_distance_total2$village=="Mandena",]
-centrality_distance_sara_df <- centrality_distance_total2[centrality_distance_total2$village=="Sarahandrano",]
-centrality_distance_anda_df <- centrality_distance_total2[centrality_distance_total2$village=="Andatsakala",]
+centrality_distance_mand_df <- centrality_distance_total2[centrality_distance_total2$village=="M_Village",]
+centrality_distance_sara_df <- centrality_distance_total2[centrality_distance_total2$village=="S_Village",]
+centrality_distance_anda_df <- centrality_distance_total2[centrality_distance_total2$village=="A_Village",]
 
 ```
 
@@ -1491,130 +1482,130 @@ perform_model_averaging <- function(data, season) {
 
  
 model_avg_name_mand_1 <- perform_model_averaging(centrality_name_mand_df, 1)
-model_avg_name_mand_1$Village <- "Mandena"
+model_avg_name_mand_1$Village <- "M_Village"
 model_avg_name_mand_1$Network <- "Naming"
 
 model_avg_name_sara_1 <- perform_model_averaging(centrality_name_sara_df, 1)
-model_avg_name_sara_1$Village <- "Sarahandrano"
+model_avg_name_sara_1$Village <- "S_Village"
 model_avg_name_sara_1$Network <- "Naming"
 
 model_avg_name_anda_1 <- perform_model_averaging(centrality_name_anda_df, 1)
-model_avg_name_anda_1$Village <- "Andatsakala"
+model_avg_name_anda_1$Village <- "A_Village"
 model_avg_name_anda_1$Network <- "Naming"
 
 model_avg_name_mand_2 <- perform_model_averaging(centrality_name_mand_df, 2)
-model_avg_name_mand_2$Village <- "Mandena"
+model_avg_name_mand_2$Village <- "M_Village"
 model_avg_name_mand_2$Network <- "Naming"
 
 
 model_avg_name_sara_2 <- perform_model_averaging(centrality_name_sara_df, 2)
-model_avg_name_sara_2$Village <- "Sarahandrano"
+model_avg_name_sara_2$Village <- "S_Village"
 model_avg_name_sara_2$Network <- "Naming"
 
 model_avg_name_anda_2 <- perform_model_averaging(centrality_name_anda_df, 2)
-model_avg_name_anda_2$Village <- "Andatsakala"
+model_avg_name_anda_2$Village <- "A_Village"
 model_avg_name_anda_2$Network <- "Naming"
 
 model_avg_name_sara_3 <- perform_model_averaging(centrality_name_sara_df, 3)
-model_avg_name_sara_3$Village <- "Sarahandrano"
+model_avg_name_sara_3$Village <- "S_Village"
 model_avg_name_sara_3$Network <- "Naming"
 
 model_avg_name_anda_3 <- perform_model_averaging(centrality_name_anda_df, 3)
-model_avg_name_anda_3$Village <- "Andatsakala"
+model_avg_name_anda_3$Village <- "A_Village"
 model_avg_name_anda_3$Network <- "Naming"
 
 model_avg_contact_mand_1 <- perform_model_averaging(centrality_contact_mand_df, 1)
-model_avg_contact_mand_1$Village <- "Mandena"
+model_avg_contact_mand_1$Village <- "M_Village"
 model_avg_contact_mand_1$Network <- "Close Contact"
 
 model_avg_contact_sara_1 <- perform_model_averaging(centrality_contact_sara_df, 1)
-model_avg_contact_sara_1$Village <- "Sarahandrano"
+model_avg_contact_sara_1$Village <- "S_Village"
 model_avg_contact_sara_1$Network <- "Close Contact"
 
 model_avg_contact_anda_1 <- perform_model_averaging(centrality_contact_anda_df, 1)
-model_avg_contact_anda_1$Village <- "Andatsakala"
+model_avg_contact_anda_1$Village <- "A_Village"
 model_avg_contact_anda_1$Network <- "Close Contact"
 
 model_avg_contact_sara_2 <- perform_model_averaging(centrality_contact_sara_df, 2)
-model_avg_contact_sara_2$Village <- "Sarahandrano"
+model_avg_contact_sara_2$Village <- "S_Village"
 model_avg_contact_sara_2$Network <- "Close Contact"
 
 model_avg_contact_anda_2 <- perform_model_averaging(centrality_contact_anda_df, 2)
-model_avg_contact_anda_2$Village <- "Andatsakala"
+model_avg_contact_anda_2$Village <- "A_Village"
 model_avg_contact_anda_2$Network <- "Close Contact"
 
 model_avg_contact_sara_3 <- perform_model_averaging(centrality_contact_sara_df, 3)
-model_avg_contact_sara_3$Village <- "Sarahandrano"
+model_avg_contact_sara_3$Village <- "S_Village"
 model_avg_contact_sara_3$Network <- "Close Contact"
 
 model_avg_contact_anda_3 <- perform_model_averaging(centrality_contact_anda_df, 3)
-model_avg_contact_anda_3$Village <- "Andatsakala"
+model_avg_contact_anda_3$Village <- "A_Village"
 model_avg_contact_anda_3$Network <- "Close Contact"
 
 model_avg_enviro_mand_1 <- perform_model_averaging(centrality_enviro_mand_df, 1)
-model_avg_enviro_mand_1$Village <- "Mandena"
+model_avg_enviro_mand_1$Village <- "M_Village"
 model_avg_enviro_mand_1$Network <- "Environmental Overlap"
 
 model_avg_enviro_sara_1 <- perform_model_averaging(centrality_enviro_sara_df, 1)
-model_avg_enviro_sara_1$Village <- "Sarahandrano"
+model_avg_enviro_sara_1$Village <- "S_Village"
 model_avg_enviro_sara_1$Network <- "Environmental Overlap"
 
 model_avg_enviro_anda_1 <- perform_model_averaging(centrality_enviro_anda_df, 1)
-model_avg_enviro_anda_1$Village <- "Andatsakala"
+model_avg_enviro_anda_1$Village <- "A_Village"
 model_avg_enviro_anda_1$Network <- "Environmental Overlap"
 
 model_avg_enviro_mand_2 <- perform_model_averaging(centrality_enviro_mand_df, 2)
-model_avg_enviro_mand_2$Village <- "Mandena"
+model_avg_enviro_mand_2$Village <- "M_Village"
 model_avg_enviro_mand_2$Network <- "Environmental Overlap"
 
 model_avg_enviro_sara_2 <- perform_model_averaging(centrality_enviro_sara_df, 2)
-model_avg_enviro_sara_2$Village <- "Sarahandrano"
+model_avg_enviro_sara_2$Village <- "S_Village"
 model_avg_enviro_sara_2$Network <- "Environmental Overlap"
 
 model_avg_enviro_anda_2 <- perform_model_averaging(centrality_enviro_anda_df, 2)
-model_avg_enviro_anda_2$Village <- "Andatsakala"
+model_avg_enviro_anda_2$Village <- "A_Village"
 model_avg_enviro_anda_2$Network <- "Environmental Overlap"
 
 model_avg_enviro_sara_3 <- perform_model_averaging(centrality_enviro_sara_df, 3)
-model_avg_enviro_sara_3$Village <- "Sarahandrano"
+model_avg_enviro_sara_3$Village <- "S_Village"
 model_avg_enviro_sara_3$Network <- "Environmental Overlap"
 
 model_avg_enviro_anda_3 <- perform_model_averaging(centrality_enviro_anda_df, 3)
-model_avg_enviro_anda_3$Village <- "Andatsakala"
+model_avg_enviro_anda_3$Village <- "A_Village"
 model_avg_enviro_anda_3$Network <- "Environmental Overlap"
 
 
 
 model_avg_distance_mand_1 <- perform_model_averaging(centrality_distance_mand_df, 1)
-model_avg_distance_mand_1$Village <- "Mandena"
+model_avg_distance_mand_1$Village <- "M_Village"
 model_avg_distance_mand_1$Network <- "Distance"
 
 model_avg_distance_sara_1 <- perform_model_averaging(centrality_distance_sara_df, 1)
-model_avg_distance_sara_1$Village <- "Sarahandrano"
+model_avg_distance_sara_1$Village <- "S_Village"
 model_avg_distance_sara_1$Network <- "Distance"
 
 model_avg_distance_anda_1 <- perform_model_averaging(centrality_distance_anda_df, 1)
-model_avg_distance_anda_1$Village <- "Andatsakala"
+model_avg_distance_anda_1$Village <- "A_Village"
 model_avg_distance_anda_1$Network <- "Distance"
 
 model_avg_distance_mand_2 <- perform_model_averaging(centrality_distance_mand_df, 2)
-model_avg_distance_mand_2$Village <- "Mandena"
+model_avg_distance_mand_2$Village <- "M_Village"
 model_avg_distance_mand_2$Network <- "Distance"
 
 model_avg_distance_sara_2 <- perform_model_averaging(centrality_distance_sara_df, 2)
-model_avg_distance_sara_2$Village <- "Sarahandrano"
+model_avg_distance_sara_2$Village <- "S_Village"
 model_avg_distance_sara_2$Network <- "Distance"
 
 model_avg_distance_anda_2 <- perform_model_averaging(centrality_distance_anda_df, 2)
-model_avg_distance_anda_2$Village <- "Andatsakala"
+model_avg_distance_anda_2$Village <- "A_Village"
 model_avg_distance_anda_2$Network <- "Distance"
 
 model_avg_distance_sara_3 <- perform_model_averaging(centrality_distance_sara_df, 3)
-model_avg_distance_sara_3$Village <- "Sarahandrano"
+model_avg_distance_sara_3$Village <- "S_Village"
 model_avg_distance_sara_3$Network <- "Distance"
 
 model_avg_distance_anda_3 <- perform_model_averaging(centrality_distance_anda_df, 3)
-model_avg_distance_anda_3$Village <- "Andatsakala"
+model_avg_distance_anda_3$Village <- "A_Village"
 model_avg_distance_anda_3$Network <- "Distance"
 
 ```
@@ -2123,7 +2114,7 @@ anda_eigen_name <- ggplot(data = centrality_name_anda, aes(x= log(Eigen)))+
   geom_histogram()+
   theme_classic()
 
-ggarrange(mand_eigen_name, sara_eigen_name, anda_eigen_name, ncol=3, labels = c("Mandena", "Sarahandrano", "Andatsakala"))
+ggarrange(mand_eigen_name, sara_eigen_name, anda_eigen_name, ncol=3, labels = c("M_Village", "S_Village", "A_Village"))
 
 
 mand_eigen_name_scatter <- ggplot(data = centrality_name_mand, aes(x= Eigen, y= PageRank))+
@@ -2138,7 +2129,7 @@ anda_eigen_name_scatter <- ggplot(data = centrality_name_anda, aes(x= Eigen, y= 
   geom_point()+
   theme_classic()
 
-ggarrange(mand_eigen_name_scatter, sara_eigen_name_scatter, anda_eigen_name_scatter, ncol=3, labels = c("Mandena", "Sarahandrano", "Andatsakala"))
+ggarrange(mand_eigen_name_scatter, sara_eigen_name_scatter, anda_eigen_name_scatter, ncol=3, labels = c("M_Village", "S_Village", "A_Village"))
 
 
 ggplot(data = centrality_distance_mand, aes(x= Eigen))+
@@ -2203,9 +2194,9 @@ centrality_name_total3 <- centrality_name_total2 %>% pivot_longer(names_to = "ce
  
   name_model_average_coef$Importance[name_model_average_coef$Variable=="season3"] <-  importance$Importance[importance$Variable=="season"]
   
-  name_model_average_coef$Importance[name_model_average_coef$Variable=="villageMandena"] <-  importance$Importance[importance$Variable=="village"]
+  name_model_average_coef$Importance[name_model_average_coef$Variable=="villageM_Village"] <-  importance$Importance[importance$Variable=="village"]
    
- name_model_average_coef$Importance[name_model_average_coef$Variable=="villageSarahandrano"] <-  importance$Importance[importance$Variable=="village"]
+ name_model_average_coef$Importance[name_model_average_coef$Variable=="villageS_Village"] <-  importance$Importance[importance$Variable=="village"]
      
   name_model_average_coef$Importance[name_model_average_coef$Variable=="centralityEigen"|name_model_average_coef$Variable=="centralityStrength"|name_model_average_coef$Variable=="centralityPageRank"] <-  importance$Importance[importance$Variable=="centrality"]
   
@@ -2302,9 +2293,9 @@ centrality_distance_total3 <- centrality_distance_total2 %>% pivot_longer(names_
  
   distance_model_average_coef$Importance[distance_model_average_coef$Variable=="season3"] <-  importance$Importance[importance$Variable=="season"]
   
-  distance_model_average_coef$Importance[distance_model_average_coef$Variable=="villageMandena"] <-  importance$Importance[importance$Variable=="village"]
+  distance_model_average_coef$Importance[distance_model_average_coef$Variable=="villageM_Village"] <-  importance$Importance[importance$Variable=="village"]
    
- distance_model_average_coef$Importance[distance_model_average_coef$Variable=="villageSarahandrano"] <-  importance$Importance[importance$Variable=="village"]
+ distance_model_average_coef$Importance[distance_model_average_coef$Variable=="villageS_Village"] <-  importance$Importance[importance$Variable=="village"]
      
   distance_model_average_coef$Importance[distance_model_average_coef$Variable=="centralityEigen"|distance_model_average_coef$Variable=="centralityStrength"|distance_model_average_coef$Variable=="centralityPageRank"] <-  importance$Importance[importance$Variable=="centrality"]
   
@@ -2393,9 +2384,9 @@ centrality_contact_total3 <- centrality_contact_total2 %>% pivot_longer(names_to
  
   contact_model_average_coef$Importance[contact_model_average_coef$Variable=="season3"] <-  importance$Importance[importance$Variable=="season"]
   
-   contact_model_average_coef$Importance[contact_model_average_coef$Variable=="villageMandena"] <-  importance$Importance[importance$Variable=="village"]
+   contact_model_average_coef$Importance[contact_model_average_coef$Variable=="villageM_Village"] <-  importance$Importance[importance$Variable=="village"]
    
-     contact_model_average_coef$Importance[contact_model_average_coef$Variable=="villageSarahandrano"] <-  importance$Importance[importance$Variable=="village"]
+     contact_model_average_coef$Importance[contact_model_average_coef$Variable=="villageS_Village"] <-  importance$Importance[importance$Variable=="village"]
      
   #contact_model_average_coef$Importance[contact_model_average_coef$Variable=="CentralityEigen:landsize_in_daba"|contact_model_average_coef$Variable=="CentralityStrength:landsize_in_daba"|contact_model_average_coef$Variable=="CentralityPageRank:landsize_in_daba"] <-  importance$Importance[importance$Variable=="Centrality:landsize_in_daba"]
   
@@ -2494,9 +2485,9 @@ centrality_enviro_total3 <- centrality_enviro_total2 %>% pivot_longer(names_to =
  
   enviro_model_average_coef$Importance[enviro_model_average_coef$Variable=="season3"] <-  importance$Importance[importance$Variable=="season"]
   
-   enviro_model_average_coef$Importance[enviro_model_average_coef$Variable=="villageMandena"] <-  importance$Importance[importance$Variable=="village"]
+   enviro_model_average_coef$Importance[enviro_model_average_coef$Variable=="villageM_Village"] <-  importance$Importance[importance$Variable=="village"]
    
-     enviro_model_average_coef$Importance[enviro_model_average_coef$Variable=="villageSarahandrano"] <-  importance$Importance[importance$Variable=="village"]
+     enviro_model_average_coef$Importance[enviro_model_average_coef$Variable=="villageS_Village"] <-  importance$Importance[importance$Variable=="village"]
      
   #enviro_model_average_coef$Importance[enviro_model_average_coef$Variable=="age:CentralityEigen"|enviro_model_average_coef$Variable=="age:CentralityStrength"|enviro_model_average_coef$Variable=="age:CentralityPageRank"] <-  importance$Importance[importance$Variable=="age:Centrality"]
   
